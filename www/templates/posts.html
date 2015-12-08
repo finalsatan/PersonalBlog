@@ -1,0 +1,43 @@
+{% extends '__base__.html' %}
+
+{% block title %}日志{% endblock %}
+
+{% block beforehead %}
+
+<script>
+</script>
+
+{% endblock %}
+
+
+
+{% block content %}
+<script>
+document.getElementById("post_page").setAttribute("class","uk-active");
+</script>
+
+    <div class="uk-width-medium-3-4">
+    {% for post in posts %}
+        <article class="uk-article">
+            <h3><a target="_blank" href={{ post.post_link }}>{{ post.post_title }}</a></h3>
+            <p>{{ post.post_content }}</p>
+            <p class="uk-article-meta">发表于{{ post.created_at|datetime }}</p>
+        </article>
+        <hr class="uk-article-divider">
+    {% endfor %}
+    {{ pagination('/posts?page=', page) }}
+    </div>
+
+    <div class="uk-width-medium-1-4">
+        <div class="uk-panel uk-panel-header">
+            <h3 class="uk-panel-title">友情链接</h3>
+            <ul class="uk-list uk-list-line">
+                <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/">廖雪峰的官方网站</a></li>
+                <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://toutiao.io/">开发者头条</a></li>
+                <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://geek.csdn.net/hotest">极客头条</a></li>
+                <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="https://v2ex.com/">V2EX</a></li>
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}
