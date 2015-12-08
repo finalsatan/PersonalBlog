@@ -17,17 +17,22 @@ import markdown2
 
 from coroweb import get, post
 from apis import Page, APIValueError, APIResourceNotFoundError
-from models import User, Comment, Blog, Post, App, next_id
+from models import User, Comment, Blog, Post, App, PushOption, next_id
 from config import configs
 
 
-COOKIE_NAME = 'awesession'
+COOKIE_NAME = configs.session.COOKIE_NAME
 _COOKIE_KEY = configs.session.secret
 
 
 def check_admin( request ):
     if request.__user__ is None or not request.__user__.admin:
         raise APIPermissionError()
+
+def check_now_user( request, user_id ):
+    if request.__user__ is None or request.__user__.id != user_id:
+        raise APIPermissionError()
+
 
 def get_page_index( page_str ):
     p = 1
@@ -164,6 +169,16 @@ def get_blog( id ):
         'comments' : comments
     }
 
+@get( '/user/{id}' )
+def get_user( id ):
+    user = yield from User.find( id )
+    push_options = yield from PushOption.findAll( 'user_id=?', [id], limit = 1 )
+
+    return {
+        '__template__' : 'push_options.html',
+        'push_option' : push_options[0]
+    }
+
 
 @get( '/manage' )
 def manage():
@@ -237,6 +252,8 @@ def api_register_user( *, email, name, passwd ):
     sha1_passwd = '%s:%s' % ( uid, passwd )
     user = User( id = uid, name = name.strip(), email = email, passwd = hashlib.sha1( sha1_passwd.encode( 'utf-8' ) ).hexdigest(), image = 'http://www.gravatar.com/avatar/%s?d=mm&s=120' % hashlib.md5( email.encode( 'utf-8' ) ).hexdigest() )
     yield from user.save()
+    push_option = PushOption( user_id = uid, user_email = email, posts_type = '全部'.encode( 'utf-8' ), keywords = '' )
+    yield from push_option.save()
     # make session cookie
     r = web.Response()
     r.set_cookie( COOKIE_NAME, user2cookie( user, 86400 ), max_age = 86400, httponly = True )
@@ -269,6 +286,16 @@ def authenticate( *, email, passwd ):
     r.content_type = 'application/json'
     r.body = json.dumps( user, ensure_ascii = False ).encode( 'utf-8' )
     return r
+
+@post( '/api/push_options/{id}' )
+def api_update_push_option( id, request, *, need_push, posts_type, keywords ):
+    push_option = yield from PushOption.find( id )
+    push_option.need_push = need_push
+    push_option.posts_type = posts_type
+    push_option.keywords = keywords.strip()
+    check_now_user( request, push_option.user_id )
+    yield from push_option.update()
+    return push_option
 
 @get( '/api/blogs' )
 def api_blogs( *, page = '1' ):

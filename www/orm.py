@@ -27,7 +27,7 @@ def create_pool( loop, **kw ):
         port = kw.get( 'port', db_port ),
         user = kw['user'],
         password = kw['password'],
-        db = kw['db'],
+        db = kw['dbname'],
         charset = kw.get( 'charset', 'utf8' ),
         autocommit = kw.get( 'autocommit', True ),
         maxsize = kw.get( 'maxsize', 10 ),

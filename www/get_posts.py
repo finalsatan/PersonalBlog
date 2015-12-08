@@ -24,16 +24,17 @@ from email.utils import parseaddr, formataddr
 import smtplib
 
 import logging
-logging.basicConfig( level = logging.WARN, format='%(asctime)s %(filename)s[line:%(lineno)d][%(levelname)s] %(message)s',
+logging.basicConfig( level = logging.INFO, format='%(asctime)s %(filename)s[line:%(lineno)d][%(levelname)s] %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S' )
 
 from models import Post, next_id
 from httprequest import HttpRequest
+from config import configs
 
-time_interval = 5
-db_user = 'ubuntu'
-db_passwd = 'ubuntu'
-db_name = 'personalblog'
+time_interval = configs.forum.time_interval
+db_user = configs.db.user
+db_passwd = configs.db.password
+db_name = configs.db.dbname
 
 def _format_addr(s):
     name, addr = parseaddr(s)
@@ -123,6 +124,65 @@ def get_post_content_and_time( post_url, post_type, post_name, time_last_time ):
 
     return post
 
+
+def judge_keywords( title, content, keywords ):
+
+    if keywords == '':
+        return True
+
+    keyword_list = keywords.split(',')
+
+    for keyword in keyword_list:
+
+        if keyword in title or keyword in content:
+            return True
+
+    return False
+
+def send_email_to_user( posts_to_email, user_email, posts_type, keywords ):
+
+    email_content = ''
+
+    for post in posts_to_email:
+        if posts_type == '全部' or posts_type == post.post_type:
+            if judge_keywords( post.post_title, post.post_content, keywords ):
+                single_post_content = '''<h3><a target="_blank" href=%s>%s</a></h3><p>发表于%s</p><p>%s</p>''' % ( post.post_link, post.post_title, post.post_time, post.post_content )
+                email_content += single_post_content
+        else:
+            logging.info( 'Posts type not match.' )
+
+    if email_content == '':
+        logging.info( 'The email content is none.' )
+        return
+    else:
+        sender = configs.email.sender
+        receiver = user_email
+        subject = configs.email.subject
+        smtpserver = configs.email.smtpserver
+        smtpport = configs.email.smtpport
+        username = configs.email.username
+        password = configs.email.password
+
+        msg = MIMEText( email_content,'html','utf-8' )   
+        msg['Subject'] = subject  
+        msg['From'] = _format_addr('笑然一生 <%s>' % sender)
+        msg['To'] = _format_addr('HiPDAer <%s>' % receiver)
+        msg['Subject'] = Header('', 'utf-8').encode()
+
+        try:
+
+            smtp = smtplib.SMTP( smtpserver, smtpport )
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(username, password)  
+            smtp.sendmail(sender, receiver, msg.as_string())  
+            smtp.quit()  
+        except Exception as e:
+            logging.error( 'Send email failed.' )
+            logging.exception( e )
+
+
+
 if __name__ == '__main__':
 
     while True:
@@ -170,9 +230,9 @@ if __name__ == '__main__':
         else:
             formhash_content = formhash.groups()[0] 
 
-        username = 'finalsatan'
+        username = configs.forum.username
         md5 = hashlib.md5()
-        password = '******'
+        password = configs.forum.password
         md5.update( password.encode('utf-8') )
         password = md5.hexdigest()
         
@@ -211,67 +271,37 @@ if __name__ == '__main__':
             logging.error( 'Decode posts response content failed.' )
             logging.exception( e )
 
-        #<em>[<a href="forumdisplay.php?fid=6&amp;filter=type&amp;typeid=8">其他好玩的</a>]</em><span id="thread_1746307"><a href="viewthread.php?tid=1746307&amp;extra=page%3D1" style="font-weight: bold;color: #3C9D40">【马来西亚国宝】强肾固元的东革阿里！“三高”克星-向天果！纯天然无副作用！</a></span>
-        
         re_pattern = re.compile( r'''<em>\[<a href="forumdisplay\.php\?fid=6&amp;filter=type&amp;typeid=.{1}">(.*)</a>]</em><span id=".*"><a href="(.+?)".*>(.*)</a></span>''' )
         m = re_pattern.findall( posts_resp_content )
+        
+        posts_to_email = []
 
-        email_content = ''
         for x in m:
             #print( x )
             post = get_post_content_and_time( x[1], x[0], x[2], get_post_time_last_time_stamp )
             if post is None:
-                #logging.warn('Get post content failed.')
                 pass
             else:
-                single_post_content = '''<h3><a target="_blank" href=%s>%s</a></h3><p>发表于%s</p><p>%s</p>''' % ( post.post_link, post.post_title, post.post_time, post.post_content )
-                email_content += single_post_content
+                posts_to_email.append( post )
+        
+        if 0 == len( posts_to_email ):
+            logging.info( 'There is not new post.' )
+        else:
+            logging.info( 'There are %s new posts.' % len( posts_to_email ) )
 
         with open('config_get_post_time', 'w') as f:
             f.write( get_post_time )
 
-        if email_content != '':
+        conn = mysql.connector.connect( user = db_user, password = db_passwd, database = db_name )
+        cursor = conn.cursor()
+        cursor.execute( ' select user_email,posts_type,keywords from push_options where need_push="1" ' )
+        result_emails = cursor.fetchall()
+        cursor.close()
+        conn.close()
 
-            conn = mysql.connector.connect( user = db_user, password = db_passwd, database = db_name )
-            cursor = conn.cursor()
-            cursor.execute( 'select email from users' )
-            result_emails = cursor.fetchall()
-            cursor.close()
-            conn.close()
+        for result_email in result_emails:
+            send_email_to_user( posts_to_email, result_email[0], result_email[1], result_email[2] )
 
-            emails = list( email[0] for email in result_emails )
-            #print('emails:', emails)
-            
-
-          
-            sender = 'zhangyhhust@gmail.com'
-            receiver = emails
-            subject = 'HiPda Buy & Sell News'  
-            smtpserver = 'smtp.gmail.com'
-            smtpport = 587
-            username = 'zhangyhhust@gmail.com'
-            password = '******'
-      
-            msg = MIMEText( email_content,'html','utf-8' )   
-            msg['Subject'] = subject  
-            msg['From'] = _format_addr('笑然一生 <%s>' % sender)
-            #msg['To'] = _format_addr('HiPDAer <%s>' % receiver)
-            msg['Subject'] = Header('', 'utf-8').encode()
-
-            try:
-                #smtp = smtplib.SMTP()  
-                smtp = smtplib.SMTP( smtpserver, smtpport )
-                smtp.ehlo()
-                smtp.starttls()
-                #smtp.connect(smtpserver)  
-                smtp.login(username, password)  
-                smtp.sendmail(sender, receiver, msg.as_string())  
-                smtp.quit()  
-            except Exception as e:
-                logging.error( 'Send email failed.' )
-                logging.exception( e )
-        else:
-            logging.info( 'Email content is none.' )
 
         time.sleep( time_interval * 60 )
 

@@ -18,13 +18,15 @@ loop.close()
 
 import sys
 import orm,asyncio
-from models import User,Blog,Comment
+from models import User,Blog,Comment,PushOption
 
 
 def test( loop ):
-    yield from orm.create_pool( loop = loop, user='ubuntu', password='ubuntu', db='personalblog' )
-    u=User(name='test3',email='test3@test.com',passwd='test',image='about:blank')
-    yield from u.save()
+    yield from orm.create_pool( loop = loop, user='ubuntu', password='ubuntu', dbname='personalblog' )
+    users = yield from User.findAll()
+    for user in users:
+        push_option = PushOption( user_id = user.id, user_email = user.email, posts_type = '全部'.encode( 'utf-8' ), keywords = '' )
+        yield from push_option.save()
 
 if __name__ == '__main__':
 

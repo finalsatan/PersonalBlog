@@ -1,0 +1,95 @@
+{% extends '__base__.html' %}
+
+{% block title %}推送设置{% endblock %}
+
+{% block beforehead %}
+
+<script>
+
+$(function () {
+    var vm = new Vue({
+        el: '#vm',
+        data: {
+            need_push: '{{ push_option.need_push }}',
+            posts_type: '{{ push_option.posts_type }}',
+            keywords: '{{ push_option.keywords }}'
+        },
+        methods: {
+            submit: function (event) {
+                event.preventDefault();
+                var $form = $('#vm');
+                
+                $form.postJSON('/api/push_options/{{ push_option.id }}' , {
+                    need_push: this.need_push,
+                    posts_type: this.posts_type,
+                    keywords: this.keywords
+                }, function (err, r) {
+                    if (err) {
+                        return $form.showFormError(err);
+                    }
+                    return location.assign('/');
+                });
+            }
+        }
+    });
+    $('#vm').show();
+});
+
+
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-2-3">
+        <h2>推送设置</h2>
+        <form id="vm" v-on="submit: submit" class="uk-form uk-form-stacked">
+            <div class="uk-alert uk-alert-danger uk-hidden"></div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">是否需要推送</label>
+                <div class="uk-form-select" data-uk-form-select>
+                        <select v-model="need_push">
+                            <option value="0">否</option>
+                            <option value="1">是</option>
+                        </select>
+                </div>
+            
+            </div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">所属类型</label>
+                <div class="uk-form-controls">
+                    <div class="uk-form-select" data-uk-form-select>
+                        <select v-model="posts_type">
+                            <option value="全部">全部</option>
+                            <option value="手机">手机</option>
+                            <option value="掌上电脑">掌上电脑</option>
+                            <option value="笔记本电脑">笔记本电脑</option>
+                            <option value="无线产品">无线产品</option>
+                            <option value="数码相机">数码相机</option>
+                            <option value="摄像机">摄像机</option>
+                            <option value="MP3随身听">MP3随身听</option>
+                            <option value="各类配件">各类配件</option>
+                            <option value="其他好玩的">其他好玩的</option>
+                            <option value="站务">站务</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="uk-form-row">
+                <label class="uk-form-label">关键字</label>
+                <div class="uk-form-controls">
+                    <input v-model="keywords" type="text" maxlength="250" placeholder="以英文逗号分隔" class="uk-width-1-1">
+                </div>
+            </div>
+            <div class="uk-form-row">
+                <button type="submit" class="uk-button uk-button-primary"><i class="uk-icon-save"></i> 保存</button>
+            </div>
+        </form>
+    </div>
+
+
+
+{% endblock %}
+

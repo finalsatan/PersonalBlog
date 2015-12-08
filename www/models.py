@@ -66,3 +66,13 @@ class App( Model ):
     app_link = StringField( ddl = 'varchar(500)' )
     app_time = FloatField( default = time.time )
     created_at = FloatField( default = time.time )
+
+class PushOption( Model ):
+    __table__ = 'push_options'
+    id = StringField( primary_key = True, default = next_id, ddl = 'varchar(50)' )
+    user_id = StringField( ddl = 'varchar(50)' )
+    user_email = StringField( ddl = 'varchar(50)' )
+    need_push = BooleanField()
+    posts_type = StringField( ddl = 'varchar(50)' )
+    keywords = StringField( ddl = 'varchar(500)' )
+    created_at = FloatField( default = time.time )

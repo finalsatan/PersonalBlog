@@ -23,8 +23,6 @@ import orm
 from coroweb import add_routes, add_static
 from handlers import cookie2user, COOKIE_NAME
 
-server_ip = '127.0.0.1'
-server_port = 9000
 
 def init_jinja2( app, **kw ):
     logging.info( 'init jinja2...' )
@@ -150,8 +148,8 @@ def init( loop ):
     init_jinja2( app, filters = dict( datetime = datatime_filter ) )
     add_routes( app, 'handlers' )
     add_static( app )
-    srv = yield from loop.create_server( app.make_handler(), server_ip, server_port )
-    logging.info( 'server started at http://%s:%d...' % ( server_ip, server_port ) )
+    srv = yield from loop.create_server( app.make_handler(), configs.server.server_ip, configs.server.server_port )
+    logging.info( 'server started at http://%s:%d...' % ( configs.server.server_ip, configs.server.server_port ) )
     return srv
 
 loop = asyncio.get_event_loop()

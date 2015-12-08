@@ -14,9 +14,27 @@ configs = {
         'port' : 3306,
         'user' : 'ubuntu',
         'password' : 'ubuntu',
-        'db' : 'personalblog'
+        'dbname' : 'personalblog'
+    },
+    'server' : {
+        'server_ip' : '127.0.0.1',
+        'server_port' : 9000
+    },
+    'forum' : {
+        'time_interval' : 5,
+        'username' : '******',
+        'password' : '******'
+    },
+    'email' : {
+        'sender' : '******',
+        'subject' : 'HiPda Buy & Sell News',
+        'smtpserver' : 'smtp.gmail.com',
+        'smtpport' : 587,
+        'username' : '******',
+        'password' : '******'
     },
     'session' : {
-        'secret' : 'Awesome'
+        'secret' : 'Awesome',
+        'COOKIE_NAME' : 'awesession'
     }
 }
