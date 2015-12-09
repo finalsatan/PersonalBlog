@@ -12,29 +12,38 @@ configs = {
     'db' : {
         'host' : '127.0.0.1',
         'port' : 3306,
-        'user' : 'ubuntu',
-        'password' : 'ubuntu',
-        'dbname' : 'personalblog'
+        'user' : '******',
+        'password' : '******',
+        'dbname' : '******'
     },
     'server' : {
         'server_ip' : '127.0.0.1',
         'server_port' : 9000
     },
     'forum' : {
-        'time_interval' : 5,
         'username' : '******',
         'password' : '******'
     },
     'email' : {
-        'sender' : '******',
+        'sender' : '******@gmail.com',
         'subject' : 'HiPda Buy & Sell News',
         'smtpserver' : 'smtp.gmail.com',
         'smtpport' : 587,
-        'username' : '******',
+        'username' : '******@gmail.com',
         'password' : '******'
     },
+    'time_interval' : {
+        0 : 480,
+        8 : 60,
+        9 : 60,
+        10 : 60,
+        11 : 60,
+        20 : 15,
+        21 : 15,
+        -1 : 30
+    },
     'session' : {
-        'secret' : 'Awesome',
-        'COOKIE_NAME' : 'awesession'
+        'secret' : '******',
+        'COOKIE_NAME' : '******'
     }
 }

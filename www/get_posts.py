@@ -31,7 +31,7 @@ from models import Post, next_id
 from httprequest import HttpRequest
 from config import configs
 
-time_interval = configs.forum.time_interval
+
 db_user = configs.db.user
 db_passwd = configs.db.password
 db_name = configs.db.dbname
@@ -224,6 +224,7 @@ if __name__ == '__main__':
         # <input type="hidden" name="formhash" value="2f68efff" />
         re_formhash = re.compile( r'''<input type="hidden" name="formhash" value="(.+)" />''' )
         formhash = re_formhash.search( formhash_resp_content )
+        formhash_content = ''
         if formhash is None:
             logging.warn('Not found the formhash.')
             pass
@@ -284,10 +285,11 @@ if __name__ == '__main__':
             else:
                 posts_to_email.append( post )
         
-        if 0 == len( posts_to_email ):
+        posts_count = len( posts_to_email )
+        if 0 == posts_count:
             logging.info( 'There is not new post.' )
         else:
-            logging.info( 'There are %s new posts.' % len( posts_to_email ) )
+            logging.info( 'There are %s new posts.' % posts_count )
 
         with open('config_get_post_time', 'w') as f:
             f.write( get_post_time )
@@ -303,6 +305,16 @@ if __name__ == '__main__':
             send_email_to_user( posts_to_email, result_email[0], result_email[1], result_email[2] )
 
 
-        time.sleep( time_interval * 60 )
+        time_interval_dict = configs.time_interval
+        current_interval = 480
+
+        hour_now = ( datetime.now() ).hour
+        if hour_now in time_interval_dict.keys():
+            current_interval = time_interval_dict[hour_now]
+        else:
+            current_interval = time_interval_dict[-1]
+
+        logging.warn( ' Sleep %s minutes. ' % current_interval )
+        time.sleep( current_interval * 60 )
 
 
