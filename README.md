@@ -10,7 +10,7 @@ Personal Blog with Python3
 4. 集成了对hipda论坛的Buy&Sell板块帖子的爬取和展示，具体可参考（[GetHiPDA_Buy-Sell_News](https://github.com/finalsatan/GetHiPDA_Buy-Sell_News)）
 
 ###更新说明:
-2015.12.09 创建初始版本
+2015.12.09 创建初始版本  
 2015.12.09 增加了注册用户对hipda论坛的Buy&Sell板块帖子推送的设置，并将配置信息集中到了一个文件
 
 
