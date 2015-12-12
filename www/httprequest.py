@@ -51,25 +51,28 @@ class HttpRequest:
 
     def send_request( self ):
         fails = 0
+        connectec_failed_flag = False
         while True:
            try:
               if fails >= 3:
-                 raise Exception()
-                 return -1
+                 connectec_failed_flag = True
+                 break
               req = urllib.request.Request( self._url, self._post_data, self._headers )
               resp = urllib.request.urlopen( req, timeout = 3 ) 
               self._resp = resp
               return resp;
            except:
               fails += 1
+              time.sleep( 3 )
               print (" Trying connect the network: ", fails)
-           else:
-               raise Exception()
-               return -1
 
+        if connectec_failed_flag:
+          raise TimeoutError()
         return self._resp
         
     def get_resp_content( self ):
+        if self._resp is None:
+            return ""
         if self._resp.info().get( 'Content-Encoding' ) == 'gzip':
             buf = BytesIO( self._resp.read() )
             f = gzip.GzipFile( fileobj = buf )

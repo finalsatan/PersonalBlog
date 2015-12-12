@@ -50,7 +50,10 @@ def get_post_content_and_time( post_url, post_type, post_name, time_last_time ):
     logging.info( 'Get post[%s] by url[%s].' % ( post_name, post_url ) )
 
     post_request = HttpRequest( post_full_url, None, post_headers )
-    post_request.send_request()
+    try:
+        post_request.send_request()
+    except TimeoutError:
+            logging.warn(" Request url[%s] failed. " % post_full_url)
     post_resp_content = post_request.get_resp_content()
     try:
         post_resp_content = post_resp_content.decode('gbk')
@@ -207,15 +210,22 @@ if __name__ == '__main__':
 
         pda_url = 'http://www.hi-pda.com/'
         pda_request = HttpRequest( pda_url )
-        pda_request.send_request()
+        try:
+            pda_request.send_request()
+        except TimeoutError:
+            logging.warn(" Request url[%s] failed. " % pda_url)
         pda_resp_content = pda_request.get_resp_content()
 
         formhash_url = 'http://www.hi-pda.com/forum/logging.php?action=login&referer=http%3A//www.hi-pda.com/forum/'
         formhash_request = HttpRequest( formhash_url, None, { 'Host' : 'www.hi-pda.com' } )
-        formhash_request.send_request()
+        try:
+            formhash_request.send_request()
+        except TimeoutError:
+            logging.warn(" Request url[%s] failed. " % formhash_url)
         formhash_resp_content = formhash_request.get_resp_content()
         try:
-            formhash_resp_content = formhash_resp_content.decode('gbk')
+            if formhash_resp_content != "":
+                formhash_resp_content = formhash_resp_content.decode('gbk')
         except UnicodeDecodeError as e:
             logging.error( 'Decode formhash response content failed.' )
             logging.exception( e )
@@ -252,7 +262,10 @@ if __name__ == '__main__':
             'Host'    : 'www.hi-pda.com'
         }
         login_request = HttpRequest( login_url, login_data, login_headers )
-        login_request.send_request()
+        try:
+            login_request.send_request()
+        except TimeoutError:
+            logging.warn(" Request url[%s] failed. " % login_url)
         login_resp_content = login_request.get_resp_content()
 
         now = datetime.now()
@@ -264,10 +277,14 @@ if __name__ == '__main__':
             'Host'    : 'www.hi-pda.com'
         }
         posts_request = HttpRequest( posts_url, None, posts_headers )
-        posts_request.send_request()
+        try:
+            posts_request.send_request()
+        except TimeoutError:
+            logging.warn(" Request url[%s] failed. " % posts_url)
         posts_resp_content = posts_request.get_resp_content()
         try:
-            posts_resp_content = posts_resp_content.decode('gbk')
+            if posts_resp_content != "":
+                posts_resp_content = posts_resp_content.decode('gbk')
         except UnicodeDecodeError as e:
             logging.error( 'Decode posts response content failed.' )
             logging.exception( e )
